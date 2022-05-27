@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BoundingBox</title>
+</head>
+<body>
+    
+<img src="" style="display:none" id="imagen">
+
+<table>
+    <tr>
+        <td>
+            <canvas width="856" height="480" id="lienzo"></canvas>
+        </td>
+        <td>
+            <select id="listado" size="28"></select>
+        </td>
+        <td>
+            <textarea id="regiones" cols="50" rows="28" disabled>
+                
+            </textarea>
+        </td>
+    </tr>
+    <tr>
+        <td>
+            <button id="T0" onClick="selTaza(0)"><img src="iconos/tazaA.jpeg" width="48" height="48"/></button>
+            <button id="T1" onClick="selTaza(1)"><img src="iconos/tazaB.jpeg" width="48" height="48"/></button>
+            <button id="T2" onClick="selTaza(2)"><img src="iconos/tazaC.jpeg" width="48" height="48"/></button>
+            <button id="T3" onClick="selTaza(3)"><img src="iconos/tazaD.jpeg" width="48" height="48"/></button>
+            <button id="T4" onClick="selTaza(4)"><img src="iconos/tazaE.jpeg" width="48" height="48"/></button>
+            <button id="T5" onClick="selTaza(5)"><img src="iconos/tazaF.jpeg" width="48" height="48"/></button>
+        </td>
+        <td></td>
+        <td></td>
+    </tr>
+
+    <tr>
+        <td>
+            <input type="file" id="filepicker" name="fileList" webkitdirectory multiple />
+        </td>
+    </tr>
+</table>
+
+
+<script>      
+
+    var xini,yini,xfin,yfin;
+    var paso=-1;
+    var nombreImagen;
+    var indice=0;
+    var COLOR_LINEA = [[255,0,0],[0,255,0],[0,0,255],[255,255,0],[0,255,255],[255,0,255]];
+    var NUM_TAZA=0;
+    var REGIONES=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]];
+    var TAZA=0;
+    var T=[document.getElementById("T0"),document.getElementById("T1"),document.getElementById("T2"),document.getElementById("T3"),document.getElementById("T4"),document.getElementById("T5"),];
+    function selTaza(letra)
+    {
+        TAZA=letra;
+        for(i=0;i<6;i++)
+            T[i].style. backgroundColor = 'white' ;
+        T[letra].style. backgroundColor = 'black' ;
+    }
+
+window.onload = function()
+{
+    var canvas = document.getElementById('lienzo');
+    var ctx=canvas.getContext("2d");
+    var regiones = document.getElementById('regiones');
+    var select = document.getElementById('listado');
+    var miImagen=document.getElementById("imagen");
+    TAZA=0;
+    T[0].style. backgroundColor = 'black' ;
+    document.getElementById("filepicker").addEventListener("change", function(event) 
+    {
+        let output = document.getElementById("listado");
+        let files = event.target.files;
+
+
+        let bandera=0;
+        
+        var tmpAry = new Array();
+        for (let i=0; i<files.length; i++) 
+        {
+            tmpAry[i] = new Array();        
+            tmpAry[i][0] = files[i].webkitRelativePath;
+        }
+        tmpAry.sort();
+       // console.log(tmpAry);
+
+        for (let i=0; i<tmpAry.length; i++) 
+        {
+            let item = document.createElement("option");
+            var cadena=tmpAry[i][0];
+            var longitud = cadena.length-3;
+            if(cadena[longitud]!='t')
+            {
+                if(bandera==0)
+                {
+                    imgChange(cadena);
+                    nombreImagen=cadena;
+                    miImagen.src=nombreImagen;
+                    bandera=1;
+                    paso=0;
+                }
+                var arrayDeCadenas = cadena.split("/");
+                item.innerHTML=cadena;
+                output.appendChild(item);
+            }
+
+        };
+
+
+
+/*
+        for (let i=0; i<files.length; i++) 
+        {
+            let item = document.createElement("option");
+            var cadena=files[i].webkitRelativePath;
+            var longitud = cadena.length-3;
+            if(cadena[longitud]!='t')
+            {
+                if(bandera==0)
+                {
+                    imgChange(cadena);
+                    nombreImagen=cadena;
+                    miImagen.src=nombreImagen;
+                    bandera=1;
+                    paso=0;
+                }
+                var arrayDeCadenas = cadena.split("/");
+                item.innerHTML=cadena;
+                output.appendChild(item);
+            }
+
+        };
+*/
+    }, false);
+    document.getElementById("listado").addEventListener('change', function () 
+    {
+            indice=this.selectedIndex;
+            imgChange(this.value);
+            nombreImagen=this.value;
+            miImagen.src=nombreImagen;
+            paso=0;
+
+                    for(i=0;i<6;i++)
+                    {
+                        REGIONES[i][0]=-1;
+                        REGIONES[i][1]=-1;
+                        REGIONES[i][2]=-1;
+                        REGIONES[i][3]=-1;
+                    } 
+                    NUM_TAZA=0; 
+
+
+            
+
+    });
+    function dibujar()
+    {
+        var i;
+        for(i=0;i<6;i++)
+        {
+            ctx.strokeStyle = "rgb("+COLOR_LINEA[i][0]+","+COLOR_LINEA[i][1]+","+COLOR_LINEA[i][2]+")";
+            //console.log(REGIONES[i][0],REGIONES[i][1],REGIONES[i][2],REGIONES[i][3]);
+            if( REGIONES[i][0]!=-1 && REGIONES[i][1]!=-1 & REGIONES[i][2]!=-1 & REGIONES[i][3]!=-1 )
+            {
+                ctx.beginPath();
+                ctx.rect(REGIONES[i][0],REGIONES[i][1],REGIONES[i][2]-REGIONES[i][0],REGIONES[i][3]-REGIONES[i][1]);
+                ctx.stroke();            
+            }
+        }
+    }
+    function imgChange(imagePath) 
+    {
+            var img=new Image();
+            img.onload = function()
+            {
+                  ctx.drawImage(img,0,0);
+            };
+            img.src=imagePath;
+    }
+    document.addEventListener('keydown', function(e) 
+    {
+        var code = e.keyCode;
+        console.log(code);
+        switch (code) 
+        {
+            case 78:
+                paso=0;
+                select.remove(indice);
+                if(select.length!=0)
+                {
+                    select.selectedIndex=0;
+                    indice=0;
+                    imgChange(select.options[0].value);
+                    nombreImagen=select.options[0].value;
+                    miImagen.src=nombreImagen;
+                    for(i=0;i<6;i++)
+                    {
+                        REGIONES[i][0]=-1;
+                        REGIONES[i][1]=-1;
+                        REGIONES[i][2]=-1;
+                        REGIONES[i][3]=-1;
+                    } 
+                    NUM_TAZA=0; 
+
+
+                }
+                else
+                {
+                    paso=-1;
+                    ctx.beginPath();
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, 856,480);            
+                    ctx.stroke();
+                }
+                break;
+            case 27:
+                paso=0;
+                break;
+            case 83: 
+                if(paso==4)
+                {
+                    var a=Math.min(xini,xfin);        
+                    var b=Math.min(yini,yfin);        
+                    var c=Math.max(xini,xfin);        
+                    var d=Math.max(yini,yfin);
+                    xini=a;
+                    yini=b;
+                    xfin=c;
+                    yfin=d;
+                    REGIONES[NUM_TAZA][0]=xini;
+                    REGIONES[NUM_TAZA][1]=yini;
+                    REGIONES[NUM_TAZA][2]=xfin;
+                    REGIONES[NUM_TAZA][3]=yfin;
+
+                    regiones.value +="\n"+" "+String.fromCharCode(TAZA+65)+" "+nombreImagen+" "+xini+" "+yini+" "+xfin+" "+yfin;
+                    paso=0;
+                    NUM_TAZA++;
+                    dibujar();
+                    break;
+                }
+        }
+    }, false);
+    canvas.addEventListener("mousemove", function (e) 
+    {
+
+        ctx.lineWidth = 2;
+        if(paso==0)
+        {
+            ctx.drawImage(miImagen, 0, 0);
+            dibujar();
+            ctx.strokeStyle = "rgb("+COLOR_LINEA[NUM_TAZA][0]+","+COLOR_LINEA[NUM_TAZA][1]+","+COLOR_LINEA[NUM_TAZA][2]+")";
+            var x=e.clientX - canvas.offsetLeft;
+            var y=e.clientY - canvas.offsetTop;
+            ctx.beginPath();
+            ctx.moveTo(x,0);
+            ctx.lineTo(x,480);
+            ctx.stroke();
+        }
+        else if(paso==1)
+        {
+            ctx.drawImage(miImagen, 0, 0);
+            dibujar();
+            ctx.strokeStyle = "rgb("+COLOR_LINEA[NUM_TAZA][0]+","+COLOR_LINEA[NUM_TAZA][1]+","+COLOR_LINEA[NUM_TAZA][2]+")";
+            var x=e.clientX - canvas.offsetLeft;
+            var y=e.clientY - canvas.offsetTop;
+            ctx.beginPath();
+            ctx.moveTo(x,0);
+            ctx.lineTo(x,480);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xini,0);
+            ctx.lineTo(xini,480);
+            ctx.stroke();
+        }
+        else if(paso==2)
+        {
+            ctx.drawImage(miImagen, 0, 0);        
+            dibujar();
+            ctx.strokeStyle = "rgb("+COLOR_LINEA[NUM_TAZA][0]+","+COLOR_LINEA[NUM_TAZA][1]+","+COLOR_LINEA[NUM_TAZA][2]+")";
+            var x=e.clientX - canvas.offsetLeft;
+            var y=e.clientY - canvas.offsetTop;
+            ctx.beginPath();
+            ctx.moveTo(0,y);
+            ctx.lineTo(856,y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xini,0);
+            ctx.lineTo(xini,480);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xfin,0);
+            ctx.lineTo(xfin,480);
+            ctx.stroke();
+        }
+        else if(paso==3)
+        {
+            ctx.drawImage(miImagen, 0, 0);
+            dibujar();
+            ctx.strokeStyle = "rgb("+COLOR_LINEA[NUM_TAZA][0]+","+COLOR_LINEA[NUM_TAZA][1]+","+COLOR_LINEA[NUM_TAZA][2]+")";
+            var x=e.clientX - canvas.offsetLeft;
+            var y=e.clientY - canvas.offsetTop;
+            ctx.beginPath();
+            ctx.moveTo(0,y);
+            ctx.lineTo(856,y);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(0,yini);
+            ctx.lineTo(856,yini);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xini,0);
+            ctx.lineTo(xini,480);
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(xfin,0);
+            ctx.lineTo(xfin,480);
+            ctx.stroke();
+        }
+
+    }, false);
+    canvas.addEventListener("mousedown", function(e)
+    {
+        if(paso==0)
+        {
+            paso=1;
+            xini=e.clientX - canvas.offsetLeft;
+        }
+        else if(paso==1)
+        {
+            paso=2;
+            xfin=e.clientX - canvas.offsetLeft;
+        }
+        else if(paso==2)
+        {
+            yini=e.clientY - canvas.offsetTop;
+            paso=3;
+        }
+        else if(paso==3)
+        {
+            yfin=e.clientY - canvas.offsetTop;
+            paso=4;
+        }
+    },false);
+    ctx.drawImage(miImagen, 0, 0);
+}
+</script> 
+</body>
+</html>
